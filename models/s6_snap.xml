@@ -1,0 +1,70 @@
+<!--
+  S6: Snap-Through (Bistable)
+  Cable bent into shallow arch; when pushed past critical point it snaps
+  to opposite arch — fast large-deformation event. Tests tracker response to
+  sudden shape change.
+-->
+<mujoco model="s6_snap">
+  <extension>
+    <plugin plugin="mujoco.elasticity.cable"/>
+  </extension>
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.0005" integrator="implicit" solver="CG"
+          iterations="80" tolerance="1e-10" cone="elliptic" jacobian="sparse"/>
+  <size njmax="2000" nconmax="2000"/>
+
+  <visual>
+    <quality shadowsize="2048"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <map stiffness="700" fogstart="10" fogend="20" znear="0.001" zfar="40"/>
+  </visual>
+  <statistic meansize="0.05" extent="2"/>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.2 0.3 0.4" rgb2="0.05 0.05 0.1"
+             width="512" height="512"/>
+    <texture name="texplane" type="2d" builtin="checker"
+             rgb1="0.25 0.25 0.25" rgb2="0.18 0.18 0.18" width="512" height="512"/>
+    <material name="matplane" texture="texplane" texrepeat="8 8" texuniform="true"/>
+  </asset>
+
+  <worldbody>
+    <light diffuse="0.6 0.6 0.6" pos="0 0 3" dir="0 0 -1" castshadow="true"/>
+    <light directional="true" diffuse="0.7 0.7 0.7" pos="1 -1 4" dir="-0.5 0.5 -1"/>
+    <geom name="ground" type="plane" size="3 3 0.1" pos="0 0 0" material="matplane" condim="3"/>
+
+    <!-- Left anchor fixed -->
+    <body name="anchor_left" pos="-0.45 0 0.9">
+      <geom type="sphere" size="0.025" rgba="0.8 0.4 0.1 1" contype="0" conaffinity="0"/>
+      <body name="cable_root" pos="0 0 0">
+        <!-- Pre-curved cable (arch shape via curve="c") -->
+        <composite type="cable" curve="s" count="31 1 1" size="0.9"
+                   offset="0 0 0" initial="none">
+          <plugin plugin="mujoco.elasticity.cable">
+            <config key="twist"  value="5e5"/>
+            <config key="bend"   value="3e6"/>
+            <config key="vmax"   value="0.05"/>
+          </plugin>
+          <joint kind="main" damping="0.002"/>
+          <geom type="capsule" size="0.007" rgba="0.05 0.9 0.1 1"
+                condim="3" conaffinity="1" contype="1"/>
+        </composite>
+      </body>
+    </body>
+
+    <!-- Right anchor fixed (both ends pinned) -->
+    <body name="anchor_right" pos="0.45 0 0.9" mocap="true">
+      <geom type="sphere" size="0.025" rgba="0.2 0.6 0.9 1" contype="0" conaffinity="0"/>
+    </body>
+
+    <!-- Middle pusher — Python drives this down to trigger snap -->
+    <body name="pusher" pos="0 0 1.05" mocap="true">
+      <geom type="sphere" size="0.02" rgba="0.9 0.1 0.1 1" contype="1" conaffinity="1"/>
+    </body>
+  </worldbody>
+
+  <equality>
+    <weld body1="anchor_right" body2="B_last" relpose="0 0 0  1 0 0 0" solimp="0.9 0.95 0.001"/>
+  </equality>
+</mujoco>

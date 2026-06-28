@@ -1,0 +1,53 @@
+<!--
+  S5: Tangling / Self-Contact
+  Cable dropped from height onto a surface with self-collision enabled.
+  Forms loops, knot-like tangles. Tests perception at crossings.
+-->
+<mujoco model="s5_tangling">
+  <extension>
+    <plugin plugin="mujoco.elasticity.cable"/>
+  </extension>
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.0008" integrator="implicit" solver="CG"
+          iterations="80" tolerance="1e-10" cone="elliptic" jacobian="sparse"/>
+  <size njmax="4000" nconmax="4000"/>
+
+  <visual>
+    <quality shadowsize="2048"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <map stiffness="700" fogstart="10" fogend="20" znear="0.001" zfar="40"/>
+  </visual>
+  <statistic meansize="0.05" extent="2"/>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.2 0.3 0.4" rgb2="0.05 0.05 0.1"
+             width="512" height="512"/>
+    <texture name="texplane" type="2d" builtin="checker"
+             rgb1="0.25 0.25 0.25" rgb2="0.18 0.18 0.18" width="512" height="512"/>
+    <material name="matplane" texture="texplane" texrepeat="8 8" texuniform="true"/>
+  </asset>
+
+  <worldbody>
+    <light diffuse="0.6 0.6 0.6" pos="0 0 3" dir="0 0 -1" castshadow="true"/>
+    <light directional="true" diffuse="0.7 0.7 0.7" pos="1 -1 4" dir="-0.5 0.5 -1"/>
+    <geom name="ground" type="plane" size="3 3 0.1" pos="0 0 0"
+          material="matplane" condim="3" friction="0.8 0.02 0.001"/>
+
+    <!-- Cable dropped from above — free falling, self-collision enabled -->
+    <body name="cable_root" pos="0 0 1.5">
+      <composite type="cable" curve="s" count="41 1 1" size="1.5"
+                 offset="0 0 0" initial="none">
+        <plugin plugin="mujoco.elasticity.cable">
+          <config key="twist"  value="5e4"/>
+          <config key="bend"   value="1e5"/>
+          <config key="vmax"   value="0.05"/>
+        </plugin>
+        <joint kind="main" damping="0.002"/>
+        <!-- Self-collision: contype=conaffinity=1 so cable hits itself -->
+        <geom type="capsule" size="0.007" rgba="0.05 0.9 0.1 1"
+              condim="3" conaffinity="1" contype="1" friction="0.6 0.02 0.001"/>
+      </composite>
+    </body>
+  </worldbody>
+</mujoco>

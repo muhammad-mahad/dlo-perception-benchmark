@@ -1,0 +1,43 @@
+# --- standalone repo .gitignore (DLO perception/tracking benchmark) ---
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Reproduced method repos are cloned here, not redistributed (own licenses)
+third_party/
+
+# MuJoCo logs
+MUJOCO_LOG.TXT
+**/MUJOCO_LOG.TXT
+
+# Benchmark run scratch — keep only the curated batch1_gpu report + frontier plots
+outputs/bench/*
+!outputs/bench/batch1_gpu/
+outputs/bench/batch1_gpu/*
+!outputs/bench/batch1_gpu/report_final.md
+!outputs/bench/batch1_gpu/frontier_2d.png
+!outputs/bench/batch1_gpu/frontier_3d.png
+
+# Demo videos: keep the curated set, drop large per-method/per-phase raw dumps if desired
+# (kept by default — comment the next lines out to slim the repo)
+# outputs/demo_videos/methods/
+# outputs/demo_videos/phases/
+
+# OS
+.DS_Store
+
+bench/
+Plan — Reproduce-and-Compare benchmark for DLO perception & tracking.md
+demo_live_v4.py
+
+# advanced DER-EKF/UKF tracker prototypes (kept in the thesis repo, not published here)
+tracking/dlo_tracker_der_ekf.py
+tracking/dlo_tracker_der_ukf.py
+
+# desktop screen-capture clip (not an offscreen render) — excluded
+outputs/demo_videos/adapteddlo_lhb_*.mp4

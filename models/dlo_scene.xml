@@ -1,0 +1,69 @@
+<!--
+  dlo_scene.xml — Universal DLO-only scene for all phase1v2 scenarios.
+  Single XML for all scenarios; Python controller drives the deformation
+  via xfrc_applied (external forces on cable bodies) — no broken weld constraints.
+
+  Cable: 31 capsule segments, 1.0m long, bright green (HSV-detectable).
+  Physics: MuJoCo native cable plugin (DER — bending + twist stiffness).
+  Root fixed at (-0.5, 0, 1.0). Far end free (Python applies forces as needed).
+-->
+<mujoco model="dlo_scene">
+  <extension>
+    <plugin plugin="mujoco.elasticity.cable"/>
+  </extension>
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.001" integrator="implicit" solver="CG"
+          iterations="60" tolerance="1e-10" cone="elliptic" jacobian="sparse"/>
+  <size njmax="3000" nconmax="3000"/>
+
+  <visual>
+    <quality shadowsize="2048"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <map stiffness="700" fogstart="10" fogend="20" znear="0.001" zfar="40"/>
+  </visual>
+  <statistic meansize="0.05" extent="2"/>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.18 0.22 0.30" rgb2="0.04 0.04 0.08"
+             width="512" height="512"/>
+    <texture name="texplane" type="2d" builtin="checker"
+             rgb1="0.22 0.22 0.22" rgb2="0.16 0.16 0.16" width="512" height="512"/>
+    <material name="matplane" texture="texplane" texrepeat="8 8" texuniform="true"/>
+  </asset>
+
+  <worldbody>
+    <light diffuse="0.6 0.6 0.6" pos="0 0 3" dir="0 0 -1" castshadow="true"/>
+    <light directional="true" diffuse="0.7 0.7 0.7" pos="1 -1 4" dir="-0.5 0.5 -1"/>
+    <geom name="ground" type="plane" size="3 3 0.1" pos="0 0 0"
+          material="matplane" condim="3" friction="0.8 0.02 0.001"/>
+
+    <!-- Overhead camera — top-down view for perception -->
+    <body name="cam_overhead" pos="0 0 0">
+      <camera name="overhead_cam" pos="0 0 2.5" xyaxes="1 0 0 0 1 0" fovy="60"/>
+    </body>
+    <!-- Front camera -->
+    <body name="cam_front" pos="0 0 0">
+      <camera name="front_cam" pos="0 -2.2 1.2" xyaxes="1 0 0 0 0.45 1" fovy="55"/>
+    </body>
+    <!-- Side camera -->
+    <body name="cam_side" pos="0 0 0">
+      <camera name="side_cam" pos="2.2 0 1.2" xyaxes="0 1 0 -0.45 0 1" fovy="55"/>
+    </body>
+
+    <!-- DLO cable — root fixed at left end, hangs/deforms via Python forces -->
+    <body name="cable_root" pos="-0.5 0 1.0">
+      <composite type="cable" curve="s" count="31 1 1" size="1.0"
+                 offset="0 0 0" initial="none">
+        <plugin plugin="mujoco.elasticity.cable">
+          <config key="twist" value="8e3"/>
+          <config key="bend"  value="3e4"/>
+          <config key="vmax"  value="0.05"/>
+        </plugin>
+        <joint kind="main" damping="0.006"/>
+        <geom type="capsule" size="0.007" rgba="0.05 0.9 0.1 1"
+              condim="3" conaffinity="1" contype="1" friction="0.6 0.02 0.001"/>
+      </composite>
+    </body>
+  </worldbody>
+</mujoco>

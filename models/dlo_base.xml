@@ -1,0 +1,41 @@
+<!--
+  dlo_base.xml — shared assets and options for all phase1v2 DLO scenarios.
+  Included via <include> from each scenario file.
+-->
+<mujoco model="dlo_base">
+  <compiler angle="radian" autolimits="true"/>
+
+  <option timestep="0.001" integrator="implicit" solver="CG"
+          iterations="50" tolerance="1e-10" cone="elliptic" jacobian="sparse"/>
+
+  <size njmax="2000" nconmax="2000"/>
+
+  <visual>
+    <quality shadowsize="2048"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <map stiffness="700" fogstart="10" fogend="20" znear="0.001" zfar="40" shadowscale="0.5"/>
+  </visual>
+
+  <statistic meansize="0.05" extent="2"/>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.2 0.3 0.4" rgb2="0.05 0.05 0.1"
+             width="512" height="512"/>
+    <texture name="texplane" type="2d" builtin="checker"
+             rgb1="0.25 0.25 0.25" rgb2="0.18 0.18 0.18"
+             width="512" height="512" mark="cross" markrgb="0.5 0.5 0.5"/>
+    <material name="matplane" texture="texplane" texrepeat="8 8"
+              texuniform="true" reflectance="0.15"/>
+    <material name="mat_cable" rgba="0.05 0.9 0.1 1"/>
+    <material name="mat_anchor" rgba="0.8 0.4 0.1 1"/>
+  </asset>
+
+  <worldbody>
+    <light diffuse="0.5 0.5 0.5" specular="0.1 0.1 0.1"
+           pos="0 0 3" dir="0 0 -1" castshadow="true"/>
+    <light directional="true" diffuse="0.7 0.7 0.7" specular="0.2 0.2 0.2"
+           pos="1 -1 4" dir="-0.5 0.5 -1"/>
+    <geom name="ground" type="plane" size="3 3 0.1" pos="0 0 0"
+          material="matplane" condim="3" friction="0.8 0.02 0.001"/>
+  </worldbody>
+</mujoco>

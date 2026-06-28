@@ -1,0 +1,63 @@
+<!--
+  S7: Plastic Deformation Emulation
+  MuJoCo DER is elastic (spring-back). To emulate plastic deformation:
+  bend the cable past a threshold, then update the rest-angle of each joint
+  via Python (joint stiffness reference update trick). The cable "remembers"
+  the new shape after the force is released.
+  This models wire that has been bent and retains its new shape.
+-->
+<mujoco model="s7_plastic">
+  <extension>
+    <plugin plugin="mujoco.elasticity.cable"/>
+  </extension>
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.001" integrator="implicit" solver="CG"
+          iterations="50" tolerance="1e-10" cone="elliptic" jacobian="sparse"/>
+  <size njmax="2000" nconmax="2000"/>
+
+  <visual>
+    <quality shadowsize="2048"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <map stiffness="700" fogstart="10" fogend="20" znear="0.001" zfar="40"/>
+  </visual>
+  <statistic meansize="0.05" extent="2"/>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.2 0.3 0.4" rgb2="0.05 0.05 0.1"
+             width="512" height="512"/>
+    <texture name="texplane" type="2d" builtin="checker"
+             rgb1="0.25 0.25 0.25" rgb2="0.18 0.18 0.18" width="512" height="512"/>
+    <material name="matplane" texture="texplane" texrepeat="8 8" texuniform="true"/>
+  </asset>
+
+  <worldbody>
+    <light diffuse="0.6 0.6 0.6" pos="0 0 3" dir="0 0 -1" castshadow="true"/>
+    <light directional="true" diffuse="0.7 0.7 0.7" pos="1 -1 4" dir="-0.5 0.5 -1"/>
+    <geom name="ground" type="plane" size="3 3 0.1" pos="0 0 0" material="matplane" condim="3"/>
+
+    <!-- One end fixed -->
+    <body name="anchor_fixed" pos="-0.5 0 0.9">
+      <geom type="sphere" size="0.025" rgba="0.8 0.4 0.1 1" contype="0" conaffinity="0"/>
+      <body name="cable_root" pos="0 0 0">
+        <composite type="cable" curve="s" count="31 1 1" size="1.0"
+                   offset="0 0 0" initial="none">
+          <plugin plugin="mujoco.elasticity.cable">
+            <config key="twist"  value="2e5"/>
+            <config key="bend"   value="1e6"/>
+            <config key="vmax"   value="0.05"/>
+          </plugin>
+          <joint kind="main" damping="0.004"/>
+          <geom type="capsule" size="0.007" rgba="0.05 0.9 0.1 1"
+                condim="3" conaffinity="1" contype="1"/>
+        </composite>
+      </body>
+    </body>
+
+    <!-- Bending tool (mocap) — Python bends cable, then releases -->
+    <body name="bender" pos="0 0 1.1" mocap="true">
+      <geom type="cylinder" size="0.03 0.015" rgba="0.9 0.5 0.1 0.8"
+            contype="1" conaffinity="1"/>
+    </body>
+  </worldbody>
+</mujoco>
